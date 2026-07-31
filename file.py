@@ -132,19 +132,45 @@ print("all checks passed")
 
 from scipy.interpolate import make_smoothing_spline
 
-# same lam, knots = clamped data sites: the new path minimizes over a
-# larger space, but the representer theorem puts the optimum in the
-# natural-spline subspace, so the two paths must return the same function.
-x = np.linspace(10)
-y = 3 * x ** 10 + 4 * x ** 2 + 5
+# Needs the scipy branch with t= support (userknots); the released scipy
+# will raise TypeError on the t= keyword.
 
+# Same lam, knots = clamped data sites: the new path minimizes over a
+# space two dimensions larger, but the representer theorem puts the
+# optimum in the natural-spline subspace common to both paths, so the
+# two implementations must return the same function.
+
+rng = np.random.default_rng(42)
+
+# uniform data
+x = np.linspace(0, 1, 10)
+y = 3 * x**3 + 4 * x**2 + 5 + rng.normal(scale=0.1, size=x.size)
+grid = np.linspace(x[0], x[-1], 300)
+
+# clamped knot vector at the data sites. Note: x[0] appears 4 times in
+# total (3 prepended + itself), matching the t=None path's
+# np.r_[[x[0]]*3, x, [x[-1]]*3] -- not 4 prepended, which would give a
+# five-fold boundary knot and a different space.
 t_x = np.r_[[x[0]] * 4, x[1:-1], [x[-1]] * 4]
+
 for lam in [1e-4, 1e-2, 1.0, 100.0]:
     s_old = make_smoothing_spline(x, y, lam=lam)
     s_new = make_smoothing_spline(x, y, lam=lam, t=t_x)
     np.testing.assert_allclose(s_new(grid), s_old(grid), atol=1e-8)
 
-# fda generation (R). Run separately; paste output into OMEGA_FDA.
+# irregular data with weights
+x = np.sort(rng.uniform(0, 4, 30))
+y = np.exp(-x) * np.sin(3 * x) + rng.normal(scale=0.05, size=x.size)
+w = rng.uniform(0.5, 3.0, x.size)
+t_x = np.r_[[x[0]] * 4, x[1:-1], [x[-1]] * 4]
+grid = np.linspace(x[0], x[-1], 300)
+
+for lam in [1e-3, 1.0]:
+    s_old = make_smoothing_spline(x, y, w=w, lam=lam)
+    s_new = make_smoothing_spline(x, y, w=w, lam=lam, t=t_x)
+    np.testing.assert_allclose(s_new(grid), s_old(grid), atol=1e-8)
+
+print("all checks passed: t = clamped x reproduces the existing path")# fda generation (R). Run separately; paste output into OMEGA_FDA.
 #
 #   library(fda)
 #   basisobj <- create.bspline.basis(rangeval = c(0, 3),
