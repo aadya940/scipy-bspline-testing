@@ -2,14 +2,14 @@
 
 Experiment for the GCV follow-up to scipy PR
 [#25862](https://github.com/scipy/scipy/pull/25862) (`t=` in
-`make_smoothing_spline`). Question (proposed by Evgeni Burovski): GCV is
+`make_smoothing_spline`). GCV is
 trusted for knots at the data (t = x); does its agreement with exact
 leave-one-out cross-validation change when the knots are user-chosen
 (t != x)?
 
 ## Method
 
-One fixed dataset for every run: `experiment_dataset.csv`, n = 100,
+One dataset for every run: `experiment_dataset.csv`, n = 100,
 x sorted uniform on [0, 4], y = sin(x) + N(0, 0.3^2), seed 42.
 
 For each lambda on a log grid (1e-6 to 1e3, 100 points):
@@ -29,7 +29,9 @@ Per run, two numbers compare the criteria:
   two minimizers in decades (grid resolution: 9/99 = 0.09 decades);
 - `r = V0(lambda_GCV) / V0(lambda_LOO) >= 1`, the leave-one-out error
   paid for using GCV's choice instead of LOOCV's.
+GCV vs exact LOOCV: does t != x change anything?
 
+Experiment for the GCV follow-up to scipy PR #25862 (t= in make_smoothing_spline). GCV is trusted for knots at the data (t = x); does its agreement with exact leave-one-out cross-validation change when the knots are user-chosen (t != x)?
 Sanity checks asserted in every run: A symmetric, diag(A) in (0, 1),
 tr(A) decreasing from the basis size toward 2, minima interior to the
 grid, r >= 1.
